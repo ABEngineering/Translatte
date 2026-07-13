@@ -22,4 +22,5 @@ contextBridge.exposeInMainWorld("aria", {
     return () => ipcRenderer.removeListener("update-status", listener);
   },
   quitAndInstall: () => ipcRenderer.send("quit-and-install"),
+  openOllamaDownload: () => ipcRenderer.send("open-ollama-download"),
 });

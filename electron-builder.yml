@@ -13,33 +13,9 @@ files:
   - src/**/*
   - renderer/**/*
   - node_modules/**/*
-  # Il motore gira solo su CPU x64: escludiamo backend GPU e altre
-  # architetture dei binari nativi di node-llama-cpp per contenere le
-  # dimensioni dell'installer (risparmio di alcune centinaia di MB).
-  - '!node_modules/@node-llama-cpp/win-arm64/**'
-  - '!node_modules/@node-llama-cpp/win-x64-cuda/**'
-  - '!node_modules/@node-llama-cpp/win-x64-cuda-ext/**'
-  - '!node_modules/@node-llama-cpp/win-x64-vulkan/**'
-  - '!node_modules/@node-llama-cpp/linux-*/**'
-  - '!node_modules/@node-llama-cpp/mac-*/**'
   - '!**/*.{md,map}'
   - '!**/test/**'
   - '!**/tests/**'
-
-# I binari nativi (.node) non devono restare compressi nell'app.asar,
-# altrimenti node-llama-cpp non riesce a caricarli a runtime.
-asarUnpack:
-  - node_modules/node-llama-cpp/bins/**
-  - node_modules/node-llama-cpp/llama/localBuilds/**
-  - node_modules/@node-llama-cpp/**
-
-# Il modello .gguf resta fuori da app.asar e da node_modules: viene
-# copiato accanto all'eseguibile e letto via process.resourcesPath.
-extraResources:
-  - from: resources/models
-    to: models
-    filter:
-      - '**/*.gguf'
 
 win:
   target:

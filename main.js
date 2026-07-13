@@ -1,6 +1,5 @@
 const { app, BrowserWindow, Menu, ipcMain, shell } = require("electron");
 const path = require("node:path");
-const fs = require("node:fs");
 
 const { LANGUAGES, LANGUAGE_ORDER, otherLanguages } = require("./src/languages");
 const { buildMenuTemplate } = require("./src/menu");
@@ -9,6 +8,7 @@ const llm = require("./src/llm");
 const updater = require("./src/updater");
 
 const isDev = process.argv.includes("--dev") || !app.isPackaged;
+const OLLAMA_DOWNLOAD_URL = "https://ollama.com/download/windows";
 
 let mainWindow = null;
 let aboutWindow = null;
@@ -17,14 +17,6 @@ const state = {
   sourceLang: "it",
   targetLang: "en",
 };
-
-function getModelPath() {
-  const filename = "Qwen_Qwen3-1.7B-Q4_K_M.gguf";
-  if (app.isPackaged) {
-    return path.join(process.resourcesPath, "models", filename);
-  }
-  return path.join(__dirname, "resources", "models", filename);
-}
 
 function rebuildMenu() {
   const template = buildMenuTemplate({
@@ -127,6 +119,8 @@ function registerIpcHandlers() {
   ipcMain.handle("check-for-updates", () => updater.checkForUpdates());
 
   ipcMain.on("quit-and-install", () => updater.quitAndInstall());
+
+  ipcMain.on("open-ollama-download", () => shell.openExternal(OLLAMA_DOWNLOAD_URL));
 }
 
 app.whenReady().then(async () => {
@@ -141,19 +135,10 @@ app.whenReady().then(async () => {
     updater.checkForUpdates();
   }
 
-  const modelPath = getModelPath();
   const sendLlmStatus = (status) => mainWindow?.webContents.send("llm-status", status);
-
-  if (!fs.existsSync(modelPath)) {
-    sendLlmStatus({
-      state: "missing-model",
-      message: `Modello non trovato in ${modelPath}. Esegui "npm run download-model".`,
-    });
-  } else {
-    llm.initLLM(modelPath, sendLlmStatus).catch((err) => {
-      console.error("Errore inizializzazione LLM:", err);
-    });
-  }
+  llm.initLLM(sendLlmStatus).catch((err) => {
+    console.error("Errore inizializzazione agente Ollama:", err);
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();

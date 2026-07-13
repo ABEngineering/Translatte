@@ -36,32 +36,33 @@
   }
 
   function setLlmStatus(status) {
+    statusText.onclick = null;
+    statusText.classList.remove("status-link");
     switch (status.state) {
-      case "loading-runtime":
+      case "checking-ollama":
         statusDot.className = "status-dot";
-        statusText.textContent = "Avvio motore offline...";
+        statusText.textContent = "Verifica Ollama...";
         break;
-      case "loading-model":
-        statusDot.className = "status-dot";
-        statusText.textContent = "Caricamento modello linguistico...";
+      case "ollama-not-running":
+        statusDot.className = "status-dot error";
+        statusText.textContent = "Ollama non trovato - clic per scaricarlo";
+        statusText.classList.add("status-link");
+        statusText.onclick = () => window.aria.openOllamaDownload();
+        showToast(status.message || "Installa e avvia Ollama, poi riprova.");
         break;
-      case "creating-context":
+      case "pulling-model":
         statusDot.className = "status-dot";
-        statusText.textContent = "Preparazione agente...";
+        statusText.textContent = `Download modello ${status.model}: ${status.percent ?? 0}%`;
         break;
       case "ready":
         llmReady = true;
         statusDot.className = "status-dot ready";
         statusText.textContent = "Agente pronto";
         break;
-      case "missing-model":
-        statusDot.className = "status-dot error";
-        statusText.textContent = "Modello non trovato";
-        showToast(status.message || "Modello non trovato. Esegui: npm run download-model");
-        break;
       case "error":
         statusDot.className = "status-dot error";
         statusText.textContent = "Errore agente";
+        showToast(status.message || "Errore nell'agente di traduzione.");
         break;
       default:
         break;

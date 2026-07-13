@@ -1,9 +1,10 @@
-// Wrapper attorno a node-llama-cpp: carica il modello GGUF locale una sola
-// volta e genera traduzioni formali/informali vincolate a JSON.
-// node-llama-cpp e' un pacchetto ESM-only: viene caricato con import()
-// dinamico anche se questo file resta CommonJS (richiesto dal main process
-// Electron), come da vincolo emerso in fase di analisi tecnica.
+// Client HTTP verso un server Ollama locale. Nessuna dipendenza npm nuova:
+// il main process Electron chiama fetch() nativo verso 127.0.0.1, senza
+// vincoli CORS (niente header Origin/preflight da un processo Node).
 const { buildSystemPrompt } = require("./prompts");
+
+const OLLAMA_BASE_URL = "http://127.0.0.1:11434";
+const MODEL_NAME = "gemma4:latest";
 
 const TRANSLATION_SCHEMA = {
   type: "object",
@@ -14,32 +15,83 @@ const TRANSLATION_SCHEMA = {
   required: ["formal", "informal"],
 };
 
-let llama = null;
-let model = null;
-let context = null;
-let grammar = null;
-let initError = null;
 let ready = false;
+let initError = null;
 
-async function initLLM(modelPath, onStatus) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 3000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    onStatus?.({ state: "loading-runtime" });
-    const { getLlama, LlamaChatSession } = await import("node-llama-cpp");
-    llamaModuleCache.LlamaChatSession = LlamaChatSession;
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-    llama = await getLlama();
+async function isOllamaReachable() {
+  try {
+    const res = await fetchWithTimeout(`${OLLAMA_BASE_URL}/api/tags`, {}, 3000);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
-    onStatus?.({ state: "loading-model" });
-    model = await llama.loadModel({ modelPath });
+async function isModelPulled(modelName) {
+  const res = await fetchWithTimeout(`${OLLAMA_BASE_URL}/api/tags`, {}, 5000);
+  if (!res.ok) throw new Error(`Ollama ha risposto con stato ${res.status}`);
+  const data = await res.json();
+  return (data.models ?? []).some((m) => m.name === modelName || m.model === modelName);
+}
 
-    onStatus?.({ state: "creating-context" });
-    context = await model.createContext();
+async function pullModel(modelName, onProgress) {
+  const res = await fetch(`${OLLAMA_BASE_URL}/api/pull`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: modelName, stream: true }),
+  });
+  if (!res.ok || !res.body) {
+    throw new Error(`Impossibile avviare il download del modello (HTTP ${res.status}).`);
+  }
 
-    try {
-      grammar = await llama.createGrammarForJsonSchema(TRANSLATION_SCHEMA);
-    } catch (grammarErr) {
-      console.warn("Grammar JSON schema non disponibile, uso fallback di parsing manuale:", grammarErr.message);
-      grammar = null;
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const progress = JSON.parse(line);
+      onProgress?.(progress);
+      if (progress.error) throw new Error(progress.error);
+    }
+  }
+}
+
+async function initLLM(onStatus) {
+  try {
+    ready = false;
+    onStatus?.({ state: "checking-ollama" });
+
+    const reachable = await isOllamaReachable();
+    if (!reachable) {
+      const message = "Ollama non e' in esecuzione. Installalo da ollama.com e avvialo, poi riprova.";
+      onStatus?.({ state: "ollama-not-running", message });
+      throw new Error(message);
+    }
+
+    const pulled = await isModelPulled(MODEL_NAME);
+    if (!pulled) {
+      onStatus?.({ state: "pulling-model", model: MODEL_NAME, percent: 0 });
+      await pullModel(MODEL_NAME, (progress) => {
+        const percent = progress.total ? Math.round((progress.completed / progress.total) * 100) : 0;
+        onStatus?.({ state: "pulling-model", model: MODEL_NAME, percent, status: progress.status });
+      });
     }
 
     ready = true;
@@ -51,8 +103,6 @@ async function initLLM(modelPath, onStatus) {
   }
 }
 
-const llamaModuleCache = {};
-
 function isReady() {
   return ready;
 }
@@ -61,41 +111,38 @@ function getInitError() {
   return initError;
 }
 
-function extractJson(text) {
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("Nessun JSON trovato nella risposta del modello.");
-  return JSON.parse(match[0]);
-}
-
 async function translate({ text, sourceLang, targetLang }) {
-  if (!ready) throw new Error("Il modello non e' ancora pronto.");
+  if (!ready) throw new Error("L'agente non e' ancora pronto.");
   if (!text || !text.trim()) return { formal: "", informal: "" };
 
-  const { LlamaChatSession } = llamaModuleCache;
   const systemPrompt = buildSystemPrompt(sourceLang, targetLang);
-  const sequence = context.getSequence();
 
-  try {
-    const session = new LlamaChatSession({ contextSequence: sequence, systemPrompt });
-    const promptOptions = { temperature: 0.3, maxTokens: 600 };
-    if (grammar) promptOptions.grammar = grammar;
+  const res = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MODEL_NAME,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: text },
+      ],
+      stream: false,
+      format: TRANSLATION_SCHEMA,
+      options: { temperature: 0 },
+    }),
+  });
 
-    const responseText = await session.prompt(text, promptOptions);
-
-    let parsed;
-    if (grammar) {
-      parsed = grammar.parse(responseText);
-    } else {
-      parsed = extractJson(responseText);
-    }
-
-    return {
-      formal: String(parsed.formal ?? "").trim(),
-      informal: String(parsed.informal ?? "").trim(),
-    };
-  } finally {
-    sequence.dispose();
+  if (!res.ok) {
+    throw new Error(`Ollama ha risposto con stato ${res.status}`);
   }
+
+  const data = await res.json();
+  const parsed = JSON.parse(data.message.content);
+
+  return {
+    formal: String(parsed.formal ?? "").trim(),
+    informal: String(parsed.informal ?? "").trim(),
+  };
 }
 
 module.exports = { initLLM, translate, isReady, getInitError };

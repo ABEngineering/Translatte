@@ -146,6 +146,9 @@ body {
 .status-dot.ready { background: #10b981; box-shadow: 0 0 8px #10b981; }
 .status-dot.error { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
 
+.status-link { cursor: pointer; text-decoration: underline; }
+.status-link:hover { color: var(--accent-deep); }
+
 .layout {
   position: relative;
   z-index: 1;
