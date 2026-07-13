@@ -45,6 +45,7 @@ function createMainWindow() {
     height: 840,
     minWidth: 1024,
     minHeight: 700,
+    show: false,
     backgroundColor: "#eef3f8",
     icon: path.join(__dirname, "build", "icon.ico"),
     webPreferences: {
@@ -53,6 +54,11 @@ function createMainWindow() {
       nodeIntegration: false,
       sandbox: false,
     },
+  });
+
+  mainWindow.once("ready-to-show", () => {
+    mainWindow.maximize();
+    mainWindow.show();
   });
 
   mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
