@@ -24,8 +24,8 @@ function buildSystemPrompt(sourceCode, targetCode) {
 
   return [
     `You are A.R.I.A., an expert professional human translator working between Italian, English and German.`,
-    `Translate the user's message from ${source.englishName} to ${target.englishName}.`,
-    `Produce exactly TWO translations of the same text into ${target.englishName}:`,
+    `Translate the user's message from ${source.name} to ${target.name}.`,
+    `Produce exactly TWO translations of the same text into ${target.name}:`,
     `1. "formal": a formal, professional register suitable for official or business communication. ${hints.formal}`,
     `2. "informal": a casual, everyday register suitable for talking to a friend. ${hints.informal}`,
     `Preserve the original meaning precisely. Do not add explanations, notes, quotes or extra commentary — only the translated text in each field.`,

@@ -26,7 +26,7 @@ Non serve scaricare alcun modello manualmente per lo sviluppo: l'app si collega 
 npm run dev
 ```
 
-Avvia l'app Electron con DevTools aperti. Lo stato dell'agente e' visibile nell'indicatore in alto a destra: "Verifica Ollama..." -> (se assente) "Ollama non trovato - clic per scaricarlo" -> (se il modello manca) "Download modello gemma4:latest: NN%" -> "Agente pronto".
+Avvia l'app Electron (l'interfaccia e' in inglese). Lo stato dell'agente e' visibile nell'indicatore in alto a destra: "Checking Ollama..." -> (se assente) "Ollama not found - click to download" -> (se il modello manca) "Downloading model gemma4:latest: NN%" -> "Agent ready". Per aprire i DevTools manualmente durante lo sviluppo: `Ctrl+Shift+I` nella finestra dell'app.
 
 ## Build dell'installer Windows
 
@@ -49,14 +49,22 @@ publish:
   repo: Translatte
 ```
 
-Flusso di pubblicazione di una nuova versione:
+Pubblicare una nuova versione e' un singolo comando:
 
-1. Aggiornare la versione: `npm version patch` (o `minor`/`major`)
-2. `gh auth login` (una sola volta, se non gia' autenticato)
-3. Esportare il token per electron-builder: PowerShell `$env:GH_TOKEN = gh auth token`, bash `export GH_TOKEN=$(gh auth token)`
-4. `npm run release` (build + pubblica la release GitHub in un solo comando)
-5. La release viene creata come **bozza**: pubblicarla con `gh release edit vX.Y.Z --draft=false` (o dal sito GitHub) perche' sia visibile e rilevabile dall'auto-update
-6. Le app gia' installate rilevano l'aggiornamento al successivo controllo (avvio automatico o pulsante "Verifica aggiornamenti" nel menu Info) e lo scaricano/installano
+```bash
+npm run release          # bump di versione "patch" (default)
+npm run release -- minor # oppure "minor" / "major"
+```
+
+Richiede solo di essere autenticati una volta con `gh auth login`. Lo script `scripts/release.mjs` fa tutto il resto in automatico:
+
+1. `npm version <patch|minor|major>` — aggiorna `package.json`, crea il commit e il tag git (es. `v1.0.3`)
+2. `git push` + `git push origin <tag>` — sincronizza commit e tag su GitHub
+3. Recupera il token da `gh auth token` e compila l'installer
+4. Pubblica la release GitHub con `electron-builder --publish always` (carica installer + `latest.yml`)
+5. Rimuove automaticamente lo stato di bozza (`gh release edit <tag> --draft=false`) perche' sia subito visibile e rilevabile dall'auto-update
+
+Le app gia' installate rilevano l'aggiornamento al successivo controllo (avvio automatico o pulsante "Verifica aggiornamenti" nel menu Info) e lo scaricano/installano.
 
 ## Struttura del progetto
 
@@ -71,6 +79,7 @@ src/updater.js           Integrazione electron-updater
 src/appInfo.js            Nome/versione/autore
 renderer/                 Interfaccia utente (HTML/CSS/JS, tema HUD futuristico chiaro)
 scripts/generate-icon.mjs  Generatore dell'icona applicazione/installer
+scripts/release.mjs         Automatizza bump versione + push + build + release GitHub
 ```
 
 ## Note sul motore di traduzione

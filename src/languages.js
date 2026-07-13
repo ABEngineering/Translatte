@@ -1,8 +1,8 @@
-// Metadati delle lingue supportate da A.R.I.A. Translate.
+// Metadata for the languages supported by A.R.I.A. Translate.
 const LANGUAGES = {
-  it: { code: "it", name: "Italiano", englishName: "Italian" },
-  en: { code: "en", name: "Inglese", englishName: "English" },
-  de: { code: "de", name: "Tedesco", englishName: "German" },
+  it: { code: "it", name: "Italian" },
+  en: { code: "en", name: "English" },
+  de: { code: "de", name: "German" },
 };
 
 const LANGUAGE_ORDER = ["it", "en", "de"];

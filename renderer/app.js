@@ -41,28 +41,28 @@
     switch (status.state) {
       case "checking-ollama":
         statusDot.className = "status-dot";
-        statusText.textContent = "Verifica Ollama...";
+        statusText.textContent = "Checking Ollama...";
         break;
       case "ollama-not-running":
         statusDot.className = "status-dot error";
-        statusText.textContent = "Ollama non trovato - clic per scaricarlo";
+        statusText.textContent = "Ollama not found - click to download";
         statusText.classList.add("status-link");
         statusText.onclick = () => window.aria.openOllamaDownload();
-        showToast(status.message || "Installa e avvia Ollama, poi riprova.");
+        showToast(status.message || "Install and start Ollama, then try again.");
         break;
       case "pulling-model":
         statusDot.className = "status-dot";
-        statusText.textContent = `Download modello ${status.model}: ${status.percent ?? 0}%`;
+        statusText.textContent = `Downloading model ${status.model}: ${status.percent ?? 0}%`;
         break;
       case "ready":
         llmReady = true;
         statusDot.className = "status-dot ready";
-        statusText.textContent = "Agente pronto";
+        statusText.textContent = "Agent ready";
         break;
       case "error":
         statusDot.className = "status-dot error";
-        statusText.textContent = "Errore agente";
-        showToast(status.message || "Errore nell'agente di traduzione.");
+        statusText.textContent = "Agent error";
+        showToast(status.message || "Error in the translation agent.");
         break;
       default:
         break;
@@ -112,7 +112,7 @@
       formalOutput.textContent = result.formal || "";
       informalOutput.textContent = result.informal || "";
     } catch (err) {
-      showToast("Errore durante la traduzione.");
+      showToast("Translation failed.");
       console.error(err);
     } finally {
       translateBtn.classList.remove("loading");
@@ -127,7 +127,7 @@
       if (!text) return;
       try {
         await navigator.clipboard.writeText(text);
-        showToast("Copiato negli appunti");
+        showToast("Copied to clipboard");
       } catch (err) {
         console.error(err);
       }

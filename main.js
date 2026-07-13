@@ -7,7 +7,6 @@ const { getAppInfo } = require("./src/appInfo");
 const llm = require("./src/llm");
 const updater = require("./src/updater");
 
-const isDev = process.argv.includes("--dev") || !app.isPackaged;
 const OLLAMA_DOWNLOAD_URL = "https://ollama.com/download/windows";
 
 let mainWindow = null;
@@ -62,8 +61,6 @@ function createMainWindow() {
     shell.openExternal(url);
     return { action: "deny" };
   });
-
-  if (isDev) mainWindow.webContents.openDevTools({ mode: "detach" });
 }
 
 function openAboutWindow() {

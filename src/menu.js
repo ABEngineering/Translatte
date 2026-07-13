@@ -15,33 +15,33 @@ function buildMenuTemplate({ state, onSetLanguage, onAbout, onCheckUpdates }) {
   return [
     {
       label: "File",
-      submenu: [{ role: "quit", label: "Esci" }],
+      submenu: [{ role: "quit", label: "Exit" }],
     },
     {
-      label: "Modifica",
+      label: "Edit",
       submenu: [
-        { role: "undo", label: "Annulla" },
-        { role: "redo", label: "Ripeti" },
+        { role: "undo", label: "Undo" },
+        { role: "redo", label: "Redo" },
         { type: "separator" },
-        { role: "cut", label: "Taglia" },
-        { role: "copy", label: "Copia" },
-        { role: "paste", label: "Incolla" },
-        { role: "selectAll", label: "Seleziona tutto" },
+        { role: "cut", label: "Cut" },
+        { role: "copy", label: "Copy" },
+        { role: "paste", label: "Paste" },
+        { role: "selectAll", label: "Select All" },
       ],
     },
     {
-      label: "Lingue",
+      label: "Languages",
       submenu: [
-        { label: "Da", submenu: languageRadioItems("source") },
-        { label: "A", submenu: languageRadioItems("target") },
+        { label: "From", submenu: languageRadioItems("source") },
+        { label: "To", submenu: languageRadioItems("target") },
       ],
     },
     {
       label: "Info",
       submenu: [
-        { label: "Verifica aggiornamenti", click: onCheckUpdates },
+        { label: "Check for Updates", click: onCheckUpdates },
         { type: "separator" },
-        { label: "Informazioni su A.R.I.A. Translate", click: onAbout },
+        { label: "About A.R.I.A. Translate", click: onAbout },
       ],
     },
   ];
