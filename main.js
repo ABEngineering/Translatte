@@ -46,7 +46,7 @@ function createMainWindow() {
     minWidth: 1024,
     minHeight: 700,
     show: false,
-    backgroundColor: "#eef3f8",
+    backgroundColor: "#cfe6f9",
     icon: path.join(__dirname, "build", "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -82,7 +82,7 @@ function openAboutWindow() {
     maximizable: false,
     parent: mainWindow,
     modal: false,
-    backgroundColor: "#eef3f8",
+    backgroundColor: "#cfe6f9",
     icon: path.join(__dirname, "build", "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),

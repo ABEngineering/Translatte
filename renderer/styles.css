@@ -30,11 +30,11 @@
 }
 
 :root {
-  --bg-1: #eaf3fb;
-  --bg-2: #dce9f7;
-  --panel: rgba(255, 255, 255, 0.64);
-  --panel-strong: rgba(255, 255, 255, 0.82);
-  --panel-border: rgba(14, 165, 233, 0.32);
+  --bg-1: #cfe6f9;
+  --bg-2: #a9cfec;
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-strong: rgba(255, 255, 255, 0.88);
+  --panel-border: rgba(14, 165, 233, 0.4);
   --accent: #0ea5e9;
   --accent-2: #06b6d4;
   --accent-deep: #0369a1;
@@ -57,7 +57,7 @@ html, body {
 body {
   font-family: "Rajdhani", "Segoe UI", sans-serif;
   color: var(--text-primary);
-  background: radial-gradient(circle at 15% -10%, #f4f9ff 0%, var(--bg-1) 45%, var(--bg-2) 100%);
+  background: radial-gradient(circle at 15% -10%, #e2f0fb 0%, var(--bg-1) 45%, var(--bg-2) 100%);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -83,9 +83,10 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 18px 28px;
-  border-bottom: 1px solid var(--panel-border);
-  background: var(--panel);
+  border-bottom: 2px solid var(--accent);
+  background: linear-gradient(120deg, rgba(14, 165, 233, 0.18), rgba(6, 182, 212, 0.12)), var(--panel);
   backdrop-filter: blur(14px);
+  box-shadow: 0 3px 14px rgba(3, 105, 161, 0.22);
 }
 
 .brand { display: flex; align-items: center; gap: 12px; }
