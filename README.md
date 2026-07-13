@@ -9,7 +9,7 @@ Creatore: **Amaro Balsamo**
 - Node.js 20+ (usato in sviluppo: v24.18.0) e npm
 - Windows 10/11 x64
 - **[Ollama](https://ollama.com/download)** installato e in esecuzione (server locale su `http://127.0.0.1:11434`)
-- Il modello `gemma4:latest` scaricato in Ollama: `ollama pull gemma4:latest` (~9.6GB). Se non presente, l'app lo scarica automaticamente al primo avvio mostrando una barra di avanzamento.
+- Il modello `gemma3:4b` scaricato in Ollama: `ollama pull gemma3:4b` (~3.3GB). Se non presente, l'app lo scarica automaticamente al primo avvio mostrando una barra di avanzamento.
 - Per prestazioni migliori: una GPU dedicata (Ollama la usa automaticamente se disponibile); su sola CPU la traduzione resta funzionante ma piu' lenta.
 
 ## Setup iniziale
@@ -18,7 +18,7 @@ Creatore: **Amaro Balsamo**
 npm install
 ```
 
-Non serve scaricare alcun modello manualmente per lo sviluppo: l'app si collega a Ollama in esecuzione sulla macchina e verifica/scarica `gemma4:latest` al primo avvio.
+Non serve scaricare alcun modello manualmente per lo sviluppo: l'app si collega a Ollama in esecuzione sulla macchina e verifica/scarica `gemma3:4b` al primo avvio.
 
 ## Sviluppo
 
@@ -26,7 +26,7 @@ Non serve scaricare alcun modello manualmente per lo sviluppo: l'app si collega 
 npm run dev
 ```
 
-Avvia l'app Electron (l'interfaccia e' in inglese). Lo stato dell'agente e' visibile nell'indicatore in alto a destra: "Checking Ollama..." -> (se assente) "Ollama not found - click to download" -> (se il modello manca) "Downloading model gemma4:latest: NN%" -> "Agent ready". Per aprire i DevTools manualmente durante lo sviluppo: `Ctrl+Shift+I` nella finestra dell'app.
+Avvia l'app Electron (l'interfaccia e' in inglese). Lo stato dell'agente e' visibile nell'indicatore in alto a destra: "Checking Ollama..." -> (se assente) "Ollama not found - click to download" -> (se il modello manca) "Downloading model gemma3:4b: NN%" -> "Agent ready". Per aprire i DevTools manualmente durante lo sviluppo: `Ctrl+Shift+I` nella finestra dell'app.
 
 ## Build dell'installer Windows
 
@@ -84,6 +84,6 @@ scripts/release.mjs         Automatizza bump versione + push + build + release G
 
 ## Note sul motore di traduzione
 
-Il motore e' **Ollama** (server locale, `http://127.0.0.1:11434`), modello di default `gemma4:latest`, configurabile cambiando la costante `MODEL_NAME` in `src/llm.js`. Ogni richiesta usa `/api/chat` con output vincolato a JSON Schema: `{ "formal": "...", "informal": "..." }`, con istruzioni di registro specifiche per lingua (es. tedesco "Sie" vs "du", italiano "Lei" vs "tu", inglese fraseggio professionale vs contratto colloquiale).
+Il motore e' **Ollama** (server locale, `http://127.0.0.1:11434`), modello di default `gemma3:4b`, configurabile cambiando la costante `MODEL_NAME` in `src/llm.js`. Ogni richiesta usa `/api/chat` con output vincolato a JSON Schema: `{ "formal": "...", "informal": "..." }`, con istruzioni di registro specifiche per lingua (es. tedesco "Sie" vs "du", italiano "Lei" vs "tu", inglese fraseggio professionale vs contratto colloquiale).
 
 Limite di lunghezza testo in input: 2000 caratteri per richiesta.
