@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require("electron");
 const path = require("node:path");
 
 const { LANGUAGES, LANGUAGE_ORDER, otherLanguages } = require("./src/languages");
@@ -11,6 +11,8 @@ const OLLAMA_DOWNLOAD_URL = "https://ollama.com/download/windows";
 
 let mainWindow = null;
 let aboutWindow = null;
+let lastLlmStatus = null;
+let manualUpdateCheck = false;
 
 const state = {
   sourceLang: "it",
@@ -22,7 +24,7 @@ function rebuildMenu() {
     state,
     onSetLanguage: setLanguage,
     onAbout: openAboutWindow,
-    onCheckUpdates: () => updater.checkForUpdates(),
+    onCheckUpdates: () => runManualUpdateCheck(),
   });
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
@@ -37,6 +39,19 @@ function setLanguage(kind, code) {
   }
   rebuildMenu();
   mainWindow?.webContents.send("language-changed", state);
+}
+
+function runManualUpdateCheck() {
+  if (!app.isPackaged) {
+    dialog.showMessageBox(mainWindow, {
+      type: "info",
+      title: "A.R.I.A. Translate",
+      message: "Update checks are only available in the installed application.",
+    });
+    return;
+  }
+  manualUpdateCheck = true;
+  updater.checkForUpdates();
 }
 
 function createMainWindow() {
@@ -59,6 +74,14 @@ function createMainWindow() {
   mainWindow.once("ready-to-show", () => {
     mainWindow.maximize();
     mainWindow.show();
+  });
+
+  // Il main process puo' inviare lo stato dell'agente (llm.initLLM) prima che
+  // il renderer abbia finito di caricare e registrato il listener IPC: senza
+  // questo replay, l'evento viene perso e la UI resta bloccata sul placeholder
+  // "Initializing agent..." anche quando l'agente e' gia' pronto.
+  mainWindow.webContents.on("did-finish-load", () => {
+    if (lastLlmStatus) mainWindow.webContents.send("llm-status", lastLlmStatus);
   });
 
   mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
@@ -119,7 +142,7 @@ function registerIpcHandlers() {
     });
   });
 
-  ipcMain.handle("check-for-updates", () => updater.checkForUpdates());
+  ipcMain.handle("check-for-updates", () => runManualUpdateCheck());
 
   ipcMain.on("quit-and-install", () => updater.quitAndInstall());
 
@@ -132,13 +155,29 @@ app.whenReady().then(async () => {
   createMainWindow();
 
   updater.setupUpdater({
-    onStatus: (status) => mainWindow?.webContents.send("update-status", status),
+    onStatus: (status) => {
+      mainWindow?.webContents.send("update-status", status);
+      if (manualUpdateCheck && (status.state === "not-available" || status.state === "error")) {
+        manualUpdateCheck = false;
+        dialog.showMessageBox(mainWindow, {
+          type: status.state === "error" ? "warning" : "info",
+          title: "A.R.I.A. Translate",
+          message:
+            status.state === "not-available"
+              ? "You already have the latest version installed."
+              : "Could not check for updates. Please try again later.",
+        });
+      }
+    },
   });
   if (app.isPackaged) {
     updater.checkForUpdates();
   }
 
-  const sendLlmStatus = (status) => mainWindow?.webContents.send("llm-status", status);
+  const sendLlmStatus = (status) => {
+    lastLlmStatus = status;
+    mainWindow?.webContents.send("llm-status", status);
+  };
   llm.initLLM(sendLlmStatus).catch((err) => {
     console.error("Errore inizializzazione agente Ollama:", err);
   });
