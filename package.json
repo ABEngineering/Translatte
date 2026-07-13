@@ -1,6 +1,6 @@
 {
   "name": "aria-translate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A.R.I.A. Translate - assistente di traduzione offline Italiano / Inglese / Tedesco",
   "main": "main.js",
   "author": "Amaro Balsamo",
