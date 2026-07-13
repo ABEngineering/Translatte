@@ -11,7 +11,8 @@
     "dev": "electron . --dev",
     "download-model": "node scripts/download-model.mjs",
     "build": "electron-builder --win nsis",
-    "pack": "electron-builder --dir"
+    "pack": "electron-builder --dir",
+    "release": "electron-builder --win nsis --publish always"
   },
   "dependencies": {
     "electron-updater": "^6.3.9",
