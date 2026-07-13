@@ -53,10 +53,13 @@
     <textarea id="inputText" maxlength="2000" placeholder="Type the text you want to translate..."></textarea>
     <div class="input-footer">
       <span class="char-count"><span id="charCount">0</span> / 2000</span>
-      <button type="button" id="translateBtn" class="translate-btn" disabled>
-        <span class="translate-btn-ring"></span>
-        <span class="translate-btn-label">Translate</span>
-      </button>
+      <div class="translate-action">
+        <span class="translate-meta" id="translateMeta"></span>
+        <button type="button" id="translateBtn" class="translate-btn" disabled>
+          <span class="translate-btn-ring"></span>
+          <span class="translate-btn-label">Translate</span>
+        </button>
+      </div>
     </div>
   </section>
 </main>

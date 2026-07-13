@@ -4,6 +4,7 @@
   const inputText = document.getElementById("inputText");
   const charCount = document.getElementById("charCount");
   const translateBtn = document.getElementById("translateBtn");
+  const translateMeta = document.getElementById("translateMeta");
   const formalOutput = document.getElementById("formalOutput");
   const informalOutput = document.getElementById("informalOutput");
   const statusDot = document.getElementById("statusDot");
@@ -12,6 +13,55 @@
 
   let llmReady = false;
   let currentState = { sourceLang: "it", targetLang: "en" };
+
+  const RATE_STORAGE_KEY = "aria_sec_per_char";
+  const DEFAULT_SEC_PER_CHAR = 1.3;
+  let elapsedTimerId = null;
+  let translateStartTime = 0;
+
+  function formatSeconds(seconds) {
+    return `${seconds.toFixed(1)}s`;
+  }
+
+  function getStoredRate() {
+    const stored = parseFloat(localStorage.getItem(RATE_STORAGE_KEY));
+    return Number.isFinite(stored) && stored > 0 ? stored : DEFAULT_SEC_PER_CHAR;
+  }
+
+  function updateStoredRate(elapsedSeconds, charCount) {
+    if (charCount <= 0) return;
+    const sample = elapsedSeconds / charCount;
+    const blended = getStoredRate() * 0.7 + sample * 0.3;
+    localStorage.setItem(RATE_STORAGE_KEY, String(blended));
+  }
+
+  function showEstimate(charCount) {
+    if (!charCount) {
+      translateMeta.textContent = "";
+      return;
+    }
+    const estimate = Math.max(1, charCount * getStoredRate());
+    translateMeta.textContent = `Est. ~${formatSeconds(estimate)}`;
+  }
+
+  function updateElapsedDisplay() {
+    const elapsed = (performance.now() - translateStartTime) / 1000;
+    translateMeta.textContent = `${formatSeconds(elapsed)} elapsed`;
+  }
+
+  function startElapsedTimer() {
+    translateStartTime = performance.now();
+    updateElapsedDisplay();
+    elapsedTimerId = setInterval(updateElapsedDisplay, 100);
+  }
+
+  function stopElapsedTimer() {
+    if (elapsedTimerId) {
+      clearInterval(elapsedTimerId);
+      elapsedTimerId = null;
+    }
+    return (performance.now() - translateStartTime) / 1000;
+  }
 
   function updateToggle(toggleEl, activeCode) {
     toggleEl.querySelectorAll("button").forEach((btn) => {
@@ -85,6 +135,7 @@
   inputText.addEventListener("input", () => {
     charCount.textContent = String(inputText.value.length);
     updateTranslateAvailability();
+    if (!elapsedTimerId) showEstimate(inputText.value.trim().length);
   });
 
   inputText.addEventListener("keydown", (e) => {
@@ -102,6 +153,7 @@
 
     translateBtn.classList.add("loading");
     translateBtn.disabled = true;
+    startElapsedTimer();
 
     try {
       const result = await window.aria.translate({
@@ -109,9 +161,14 @@
         sourceLang: currentState.sourceLang,
         targetLang: currentState.targetLang,
       });
+      const elapsed = stopElapsedTimer();
+      translateMeta.textContent = `Done in ${formatSeconds(elapsed)}`;
+      updateStoredRate(elapsed, text.length);
       formalOutput.textContent = result.formal || "";
       informalOutput.textContent = result.informal || "";
     } catch (err) {
+      stopElapsedTimer();
+      translateMeta.textContent = "";
       showToast("Translation failed.");
       console.error(err);
     } finally {

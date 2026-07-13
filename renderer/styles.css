@@ -269,6 +269,20 @@ body {
   letter-spacing: 0.5px;
 }
 
+.translate-action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.translate-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+  min-height: 14px;
+  white-space: nowrap;
+}
+
 .translate-btn {
   position: relative;
   display: inline-flex;
