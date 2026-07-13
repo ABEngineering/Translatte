@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'" />
+<title>Informazioni</title>
+<link rel="stylesheet" href="about.css" />
+</head>
+<body>
+<div class="about-card">
+  <div class="about-ring">
+    <span class="about-ring-core"></span>
+  </div>
+  <h1 id="appName">A.R.I.A. Translate</h1>
+  <p class="about-desc" id="appDescription"></p>
+
+  <dl class="about-meta">
+    <dt>Versione</dt>
+    <dd id="appVersion">-</dd>
+    <dt>Creatore</dt>
+    <dd id="appCreator">-</dd>
+  </dl>
+
+  <button type="button" id="checkUpdatesBtn" class="about-btn">Verifica aggiornamenti</button>
+  <p class="update-status" id="updateStatus"></p>
+</div>
+<script src="about.js"></script>
+</body>
+</html>
