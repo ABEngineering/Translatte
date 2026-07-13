@@ -4,7 +4,7 @@
 const { buildSystemPrompt } = require("./prompts");
 
 const OLLAMA_BASE_URL = "http://127.0.0.1:11434";
-const MODEL_NAME = "gemma3:4b";
+const MODEL_NAME = "gemma4:latest";
 
 const TRANSLATION_SCHEMA = {
   type: "object",
